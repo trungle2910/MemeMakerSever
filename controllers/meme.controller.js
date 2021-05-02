@@ -81,8 +81,36 @@ const getOriginalImages = (req, res, next) => {
     next(error);
   }
 };
+const updateMeme = async (req, res, next) => {
+  try {
+    const memeId = req.params.id;
+    // Read data from the json file
+    let rawData = fs.readFileSync("memes.json");
+    let memes = JSON.parse(rawData).memes;
+    const index = memes.findIndex((meme) => meme.id === memeId);
+
+    if (index === -1) return next(new Error("Meme not found"));
+
+    const meme = memes[index];
+    let { texts } = req.body;
+    meme.texts = texts && Array.isArray(texts) ? texts : [];
+    meme.updatedAt = Date.now();
+
+    // Put text on image
+    await photoHelper.putTextOnImage(
+      meme.originalImagePath,
+      meme.outputMemePath,
+      meme.texts
+    );
+    fs.writeFileSync("memes.json", JSON.stringify({ memes }));
+    res.status(200).json(meme);
+  } catch (err) {
+    next(err);
+  }
+};
 module.exports = {
   createMeme,
   getMemes,
   getOriginalImages,
+  updateMeme,
 };

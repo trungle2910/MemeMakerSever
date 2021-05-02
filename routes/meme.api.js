@@ -35,4 +35,11 @@ router.post(
  * @access Public
  */
 router.get("/images", memeController.getOriginalImages);
+
+/**
+ * @route PUT api/memes/:id
+ * @description Update text on the meme
+ * @access Public
+ */
+router.put("/:id", memeController.updateMeme);
 module.exports = router;
