@@ -1,5 +1,6 @@
 const fs = require("fs");
 const photoHelper = require("../middleware/photo.helper");
+const utilsHelper = require("../helpers/utils.helper");
 
 const createMeme = async (req, res, next) => {
   try {
@@ -88,12 +89,24 @@ const updateMeme = async (req, res, next) => {
     let rawData = fs.readFileSync("memes.json");
     let memes = JSON.parse(rawData).memes;
     const index = memes.findIndex((meme) => meme.id === memeId);
-
-    if (index === -1) return next(new Error("Meme not found"));
-
+    if (index === -1) {
+      return utilsHelper.sendResponse(
+        res,
+        400,
+        false,
+        null,
+        new Error("Meme not found"),
+        null
+      );
+    }
     const meme = memes[index];
     let { texts } = req.body;
-    meme.texts = texts && Array.isArray(texts) ? texts : [];
+    if (texts) {
+      if (!Array.isArray(texts)) texts = [texts];
+      meme.texts = texts.map((text) => JSON.parse());
+    } else {
+      meme.texts = [];
+    }
     meme.updatedAt = Date.now();
 
     // Put text on image
@@ -103,11 +116,19 @@ const updateMeme = async (req, res, next) => {
       meme.texts
     );
     fs.writeFileSync("memes.json", JSON.stringify({ memes }));
-    res.status(200).json(meme);
+    return utilsHelper.sendResponse(
+      res,
+      200,
+      true,
+      meme,
+      null,
+      "Meme has been updated!"
+    );
   } catch (err) {
     next(err);
   }
 };
+
 module.exports = {
   createMeme,
   getMemes,

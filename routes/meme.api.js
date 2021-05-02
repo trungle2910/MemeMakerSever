@@ -42,4 +42,5 @@ router.get("/images", memeController.getOriginalImages);
  * @access Public
  */
 router.put("/:id", memeController.updateMeme);
+
 module.exports = router;
