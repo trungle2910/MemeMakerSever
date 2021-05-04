@@ -1,6 +1,5 @@
 const fs = require("fs");
 const photoHelper = require("../middleware/photo.helper");
-const utilsHelper = require("../helpers/utils.helper");
 
 const createMeme = async (req, res, next) => {
   try {
@@ -88,25 +87,15 @@ const updateMeme = async (req, res, next) => {
     // Read data from the json file
     let rawData = fs.readFileSync("memes.json");
     let memes = JSON.parse(rawData).memes;
-    const index = memes.findIndex((meme) => meme.id === memeId);
-    if (index === -1) {
-      return utilsHelper.sendResponse(
-        res,
-        400,
-        false,
-        null,
-        new Error("Meme not found"),
-        null
-      );
-    }
+    const index = memes.findIndex((meme) => meme.id == memeId);
+    console.log("memes", memeId, memes);
+    console.log("typeof ", typeof memeId);
+
+    if (index === -1) return next(new Error("Meme not found"));
+
     const meme = memes[index];
     let { texts } = req.body;
-    if (texts) {
-      if (!Array.isArray(texts)) texts = [texts];
-      meme.texts = texts.map((text) => JSON.parse());
-    } else {
-      meme.texts = [];
-    }
+    meme.texts = texts && Array.isArray(texts) ? texts : [];
     meme.updatedAt = Date.now();
 
     // Put text on image
@@ -116,14 +105,7 @@ const updateMeme = async (req, res, next) => {
       meme.texts
     );
     fs.writeFileSync("memes.json", JSON.stringify({ memes }));
-    return utilsHelper.sendResponse(
-      res,
-      200,
-      true,
-      meme,
-      null,
-      "Meme has been updated!"
-    );
+    res.status(200).json(meme);
   } catch (err) {
     next(err);
   }
